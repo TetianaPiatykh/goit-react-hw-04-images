@@ -1,8 +1,8 @@
-import { Component } from "react";
+import { useState, useEffect } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AppForm } from "./App.styled";
-import Searchbar from './Searchbar/Searchbar';
+import {Searchbar} from './Searchbar/Searchbar';
 import { getImages } from '../api';
 import { ImageGallery } from "./ImageGallery/ImageGallery";
 import { LoadMoreBtn } from "./Button/Button";
@@ -10,95 +10,83 @@ import { Loader } from "./Loader/Loader";
 
 
 
-export class App extends Component {
+export const App = () => {
 
-  state = {
-    page: 1,
-    perPage: 12,
-    query: '',
-    images: [],
-    endOffList: false,
-    isLoading: false,
-    error: false
+  const [page, setPage] = useState(1);
+  // const [perPage, setPerPage] = useState(12);
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [endOffList, setEndOffList] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const PER_PAGE = 12;
 
-  };
-
-  async componentDidUpdate(prevProps, prevState) {
-
-    if (prevState.page !== this.state.page || prevState.query !== this.state.query ) {
-
-      this.fetchImages(); 
-    }
-  }
-
-
-  handleFormSubmit = (query) => {
-    if (this.state.query !== query) {
-    this.setState({ query: query, page: 1, endOffList: false, images: [], });
-    console.log(query);
-    }
-
-  }
-  componentDidMount() {
-  };
-
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  }
-
-
-
-  fetchImages = async () => {
-    const { page, query, perPage} = this.state;
-    try {
-      this.setState({ isLoading: true });
-      const images = await getImages(query, page, perPage);
+  useEffect(() => {
+  
+    async function fetchImages() {
+      try {
+        if (query === '') {
+          return;
+        };
+      setIsLoading(true);
+      const images = await getImages(query, page, PER_PAGE);
       const newImages = await images.hits;
-      const totalPages = Math.ceil(images.totalHits / perPage);
-      this.endOffListFunction(page, totalPages)
+      const totalPages = Math.ceil(images.totalHits / PER_PAGE);
+      endOffListFunction(page, totalPages);
+      setImages(images => [...images, ...newImages]);
     
-      this.setState(({ images }) => ({
-      
-        images: [...images, ...newImages],
-      }));
-    
-    } catch {
+    } catch(error) {
 
-      this.setState({ error: true });
+          setError(true);
+          console.log(error);
 
     } finally {
 
-      this.setState({ isLoading: false });
+      setIsLoading(false);
 
     }
+    }
+    fetchImages();
+  }, [page, query, error]) 
+
+
+  const handleFormSubmit = (searchBarValue) => {
+    if (query !== searchBarValue) {
+      setQuery(searchBarValue);
+      setPage(1);
+      setEndOffList(false);
+      setImages([]);
+    };
 
   }
 
-  endOffListFunction = (page, totalPages) => {
+  const loadMore = () => {
+    setPage(prevState => prevState.page + 1);
+  }
+
+  const endOffListFunction = (page, totalPages) => {
     if (page === totalPages) {
-      this.setState({ endOffList: true });
+      setEndOffList(true);
       toast.info("Sorry, but this is the end of search results.");
     }
   }
 
 
-  render() {
-    const { images, endOffList, isLoading } = this.state;
+
+    // const { images, endOffList, isLoading } = this.state;
     return (  
     <AppForm > 
-        <Searchbar onSubmit={this.handleFormSubmit} />
+        <Searchbar onSubmit={handleFormSubmit} />
         <ImageGallery images={images} />
 
-        {images.length > 0 && !endOffList && (<LoadMoreBtn loadMore={this.loadMore} />)}
+        {images.length > 0 && !endOffList && (<LoadMoreBtn loadMore={loadMore} />)}
 
         {isLoading && <Loader />}
         
         <ToastContainer autoClose={3000} />
     </AppForm>
   );
-  }
+  
  
 };
 

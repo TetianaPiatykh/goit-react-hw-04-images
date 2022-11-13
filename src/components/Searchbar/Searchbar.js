@@ -1,40 +1,31 @@
-import { Component } from "react";
+import { useState} from "react";
 import { BsSearch } from "react-icons/bs";
 import { toast } from 'react-toastify';
 import { SearchBar, SearchForm, SearchFormBtn, SearchFormInput, SearchFormBtnLabel } from './Searchbar.styled';
 import PropTypes from 'prop-types';
 
-export default class Searchbar extends Component  {
-    state = {
-        query: '',
+export const Searchbar = ({onSubmit}) => {
 
-    }
+    const [query, setQuery] = useState('');
 
-    handleQueryChange = e => {
 
-        
-
-        this.setState({ query: e.currentTarget.value.toLowerCase() });
-        
+    const handleQueryChange = e => {
+        setQuery(e.currentTarget.value.toLowerCase());     
     }
     
-    handleSubmit = (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        if (this.state.query.trim() === '') {
+        if (query.trim() === '') {
             // alert('Введити поисковый запрос')
             toast.error('Please enter a search term')
             return;
         }
-
-
-        this.props.onSubmit(this.state.query);
+        onSubmit(query);
     }
     
 
-
-    render() {
         return (
-        <SearchBar onSubmit={this.handleSubmit}>
+        <SearchBar onSubmit={handleSubmit}>
             <SearchForm>
                     <SearchFormBtn type="submit" >
                         <BsSearch />
@@ -47,14 +38,12 @@ export default class Searchbar extends Component  {
                     autocomplete="off"
                     autoFocus
                     placeholder="Search images and photos"
-                    value={this.state.query}
-                    onChange={this.handleQueryChange}
+                    value={query}
+                    onChange={handleQueryChange}
                 />
             </SearchForm>
         </SearchBar>
     );
-    }
-    
 };
 
 Searchbar.propTypes = {
