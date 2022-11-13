@@ -61,7 +61,7 @@ export const App = () => {
   }
 
   const loadMore = () => {
-    setPage(prevState => prevState.page + 1);
+    setPage(prevState => prevState + 1);
   }
 
   const endOffListFunction = (page, totalPages) => {
